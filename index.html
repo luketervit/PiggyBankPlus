@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PiggyBank Plus</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+    --primary: #c45a91; /* Hot pink */
+    --secondary: #da82f0; /* Kept original green for dispense button */
+    --accent: #d172a3; /* Lighter pink */
+    --text: #333333; /* Kept original dark text */
+    --background: #FFF0F5; /* Lavender blush (very light pink) */
+    --danger: #d172a3; /* Deep pink */
+    --success: #66a16a; /* Kept original green for success messages */
+    --divider: #FFCCE5; /* Light pink */
+    --tab-inactive: #FFF0F5; /* Very light pink */
+    
+    /* Difficulty colors - keeping original for functional clarity */
+    --very-easy: #72d36b; /* Green */
+    --easy: #edeb6d; /* Yellow */
+    --medium: #efb462; /* Orange */
+    --hard: #e76262; /* Red */
+    
+    /* UK Coin Colors */
+    --copper: #B87333;       /* 1p, 2p */
+    --silver: #C0C0C0;       /* 5p, 10p, 20p, 50p */
+    --gold: #DAA520;         /* £1 */
+    --bimetal-outer: #DAA520; /* £2 outer */
+    --bimetal-inner: #C0C0C0; /* £2 inner */
+}
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        input, p, h1, h2, h3, button {
+            user-select: text;
+        }
+        
+        body {
+            background-color: var(--background);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .page-wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+        }
+        
+        header {
+            width: 100%;
+            text-align: center;
+            padding: 25px 20px;
+            background-color: var(--primary);
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        header h1 {
+            font-size: 2.2em;
+            margin: 0;
+            color: white;
+            font-weight: 700;
+        }
+        
+        header p {
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 8px;
+            font-size: 1.1em;
+        }
+        
+        .content-wrapper {
+            width: 100%;
+            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            padding: 0 20px 40px 20px;
+        }
+        
+        @media (min-width: 992px) {
+            .content-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .full-width {
+                grid-column: span 2;
+            }
+        }
+        
+        .container {
+            width: 100%;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        
+        .container h2 {
+            font-size: 1.6em;
+            margin-bottom: 20px;
+            color: var(--accent);
+            position: relative;
+            display: inline-block;
+        }
+        
+        .container h2::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+        }
+        
+       /* Custom styles for coin-grid */
+/* Static coin display - no animations */
+/* Grid layout for coins */
+/* Grid layout for coins */
+.coin-grid {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 25px;
+    grid-template-columns: repeat(4, 1fr); /* 4 coins per row by default */
+}
+
+@media (max-width: 599px) {
+    .coin-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 coins per row on mobile */
+    }
+}
+
+.coin-item {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--divider);
+}
+
+.coin-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Static coin display with proper shapes */
+.coin-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+}
+
+.coin {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 50%; /* Default is round */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific coin styles for each denomination */
+/* 1 pence - copper, round */
+.coin[data-denomination="1p"] {
+    background: var(--copper);
+    color: white;
+}
+
+/* 2 pence - copper, round */
+.coin[data-denomination="2p"] {
+    background: var(--copper);
+    color: white;
+}
+
+/* 5 pence - silver, round */
+.coin[data-denomination="5p"] {
+    background: var(--silver);
+    color: #333;
+}
+
+/* 10 pence - silver, round */
+.coin[data-denomination="10p"] {
+    background: var(--silver);
+    color: #333;
+}
+
+/* 20 pence - silver, heptagonal */
+.coin[data-denomination="20p"] {
+    background: var(--silver);
+    color: #333;
+    border-radius: 0;
+    clip-path: polygon(
+        50% 0%, 
+        90% 20%, 
+        100% 60%, 
+        75% 100%, 
+        25% 100%, 
+        0% 60%, 
+        10% 20%
+    );
+}
+
+/* 50 pence - silver, heptagonal */
+.coin[data-denomination="50p"] {
+    background: var(--silver);
+    color: #333;
+    border-radius: 0;
+    clip-path: polygon(
+        50% 0%, 
+        90% 20%, 
+        100% 60%, 
+        75% 100%, 
+        25% 100%, 
+        0% 60%, 
+        10% 20%
+    );
+}
+
+/* 1 pound - gold, round */
+.coin[data-denomination="£1"] {
+    background: var(--gold);
+    color: white;
+}
+
+/* 2 pounds - bi-metallic, round with gold ring around silver center */
+.coin[data-denomination="£2"] {
+    background: var(--gold); /* Gold background for the outer ring */
+    color: black;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* The inner silver circle - make it smaller to show the gold ring */
+.coin[data-denomination="£2"]::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%; /* Slightly reduced to show more gold around the edge */
+    height: 75%; /* Slightly reduced to show more gold around the edge */
+    background: var(--silver);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Text on top of everything */
+.coin[data-denomination="£2"] span {
+    position: relative;
+    z-index: 2;
+    font-weight: bold;
+    color: black; 
+}
+
+.coin-value {
+    font-weight: bold;
+    font-size: 1.3em;
+    margin-bottom: 8px;
+    color: var(--primary);
+}
+        
+        .total-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 15px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .total-section::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+        }
+        
+        .total-section h2 {
+            color: white;
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
+        }
+        
+        .total-section h1 {
+            color: white;
+            font-size: 3em;
+            margin: 15px 0;
+            font-weight: 700;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .total-section p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            user-select: none;
+            font-size: 1em;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .primary-btn {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .danger-btn {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .dispense-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .dispense-section h2 {
+            margin-bottom: 5px;
+        }
+        
+        .dispense-form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        #dispenseAmount {
+            padding: 15px;
+            border: 2px solid var(--divider);
+            border-radius: 50px;
+            text-align: center;
+            width: 35%;
+            font-size: 1.1em;
+            user-select: auto;
+            transition: all 0.3s;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        #dispenseAmount:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 126, 103, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .success-message, .error-message {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+            width: 100%;
+            max-width: 400px;
+            font-weight: 500;
+            animation: slide-up 0.4s ease;
+        }
+        
+        .success-message {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .error-message {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        @keyframes slide-up {
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Game mode tabs styling */
+        .game-mode-tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--divider);
+            width: 100%;
+            position: relative;
+        }
+        
+        .game-tab {
+            padding: 12px 20px;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            background-color: var(--tab-inactive);
+            border: 1px solid var(--divider);
+            border-bottom: none;
+            position: relative;
+            bottom: -2px;
+            opacity: 0.8;
+        }
+        
+        .game-tab.active {
+            background-color: white;
+            border-bottom: 2px solid white;
+            opacity: 1;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+            z-index: 1;
+        }
+        
+        .game-tab:first-child.active {
+            border-top: 3px solid var(--primary);
+        }
+        
+        .game-tab:last-child.active {
+            border-top: 3px solid var(--accent);
+        }
+        
+        .game-content {
+            display: none;
+        }
+        
+        .game-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* Difficulty sub-tabs styling */
+        .difficulty-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .difficulty-tab {
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            background-color: var(--tab-inactive);
+            border: 1px solid var(--divider);
+            opacity: 0.75;
+        }
+        
+        .difficulty-tab.active {
+            opacity: 1;
+            color: white;
+        }
+        
+        .difficulty-tab[data-difficulty="ALL"].active {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+        
+        .difficulty-tab[data-difficulty="VERY_EASY"].active {
+            background-color: var(--very-easy);
+            border-color: var(--very-easy);
+        }
+        
+        .difficulty-tab[data-difficulty="EASY"].active {
+            background-color: var(--easy);
+            border-color: var(--easy);
+        }
+        
+        .difficulty-tab[data-difficulty="MEDIUM"].active {
+            background-color: var(--medium);
+            border-color: var(--medium);
+        }
+        
+        .difficulty-tab[data-difficulty="HARD"].active {
+            background-color: var(--hard);
+            border-color: var(--hard);
+        }
+        
+        .difficulty-content {
+            display: none;
+        }
+        
+        .difficulty-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        
+        .win-ratio-section {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .ratio-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .ratio-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        #addEmUpRatio {
+            background-color: rgba(255, 126, 103, 0.1);
+            border-bottom: 4px solid var(--primary);
+        }
+        
+        #coinComboRatio {
+            background-color: rgba(154, 118, 179, 0.1);
+            border-bottom: 4px solid var(--accent);
+        }
+        
+        .ratio-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        #addEmUpRatio .ratio-number {
+            color: var(--primary);
+        }
+        
+        #coinComboRatio .ratio-number {
+            color: var(--accent);
+        }
+        
+        .ratio-detail {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: var(--text);
+            opacity: 0.8;
+        }
+        
+        .pin-status-section {
+            padding: 25px;
+            border-radius: 15px;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .pin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .pin-status-box, .pin-change-box {
+            padding: 20px;
+            border-radius: 12px;
+            background-color: white;
+        }
+
+        .pin-status-box {
+            border-left: 4px solid var(--primary);
+        }
+
+        .pin-change-box {
+            border-left: 4px solid var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .pin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .status-indicator {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .status-indicator h3 {
+            display: inline-block;
+            padding-bottom: 10px;
+            position: relative;
+        }
+        
+        .status-indicator h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+        }
+        
+        .pin-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .pin-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .pin-form input {
+            padding: 15px;
+            border: 2px solid var(--divider);
+            border-radius: 50px;
+            text-align: center;
+            width: 100%;
+            max-width: 250px;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .pin-form input:focus {
+            border-color: var(--accent);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(154, 118, 179, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .pin-action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+        
+        .change-pin-section {
+            padding: 25px 15px;
+            border-top: 1px solid var(--divider);
+            margin-top: 25px;
+            text-align: center;
+        }
+        
+        .change-pin-section h3 {
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .change-pin-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+        }
+        
+        @keyframes success-highlight {
+            0% { background-color: var(--background); }
+            30% { background-color: rgba(107, 203, 119, 0.2); }
+            100% { background-color: var(--background); }
+        }
+        
+        .pin-success-highlight {
+            animation: success-highlight 2s ease;
+            border-radius: 12px;
+        }
+        
+        .pin-change-success {
+            color: var(--success);
+            font-weight: bold;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+        
+        .pin-change-success.visible {
+            opacity: 1;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .loading {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .error-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--danger) !important;
+        }
+        
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 25px 20px;
+            background-color: var(--primary);
+            color: white;
+            margin-top: auto;
+        }
+        
+        footer p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+        }
+        
+        .no-stats-message {
+            text-align: center;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            margin: 20px 0;
+            font-style: italic;
+            color: var(--text);
+            opacity: 0.7;
+        }
+        
+        /* Coin display colors */
+        .coin-2pound { background: linear-gradient(45deg, #C0C0C0, #DAA520); }
+        .coin-1pound { background: #DAA520; }  /* Golden/brass color */
+        .coin-50p { background: #C0C0C0; }     /* Silver color */
+        .coin-20p { background: #C0C0C0; }     /* Silver color */
+        .coin-10p { background: #C0C0C0; }     /* Silver color */
+        .coin-5p { background: #C0C0C0; }      /* Silver color */
+        .coin-2p { background: #B87333; }      /* Copper color */
+        .coin-1p { background: #B87333; }      /* Copper color */
+
+        /* Remove pink backgrounds from PIN sections */
+        .pin-status-section {
+            background-color: white;  /* Change from pink to white */
+        }
+
+        .pin-status-box, .pin-change-box {
+            background-color: white;  /* Change from pink to white */
+        }
+
+        /* Coin display styles */
+        .coin {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            color: white;  /* Make text white for better contrast */
+            font-weight: bold;
+        }
+
+        /* Real UK coin colors */
+        .coin[data-denomination="1p"] { 
+            background: #B87333;  /* Copper color */
+        }
+
+        .coin[data-denomination="2p"] {
+            background: #B87333;  /* Copper color */
+        }
+
+        .coin[data-denomination="5p"] {
+            background: #C0C0C0;  /* Silver color */
+            color: #333;  /* Darker text for silver coins */
+        }
+
+        .coin[data-denomination="10p"] {
+            background: #C0C0C0;  /* Silver color */
+            color: #333;  /* Darker text for silver coins */
+        }
+
+        .coin[data-denomination="20p"] {
+            background: #C0C0C0;  /* Silver color */
+            color: #333;  /* Darker text for silver coins */
+        }
+
+        .coin[data-denomination="50p"] {
+            background: #C0C0C0;  /* Silver color */
+            color: #333;  /* Darker text for silver coins */
+        }
+
+        .coin[data-denomination="£1"] {
+            background: #DAA520;  /* Golden/brass color */
+        }
+
+        .coin[data-denomination="£2"] {
+            background: linear-gradient(45deg, #C0C0C0, #DAA520);  /* Bi-metallic effect */
+        }
+
+        /* Container backgrounds */
+        .container {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <h1>🐷 PiggyBank Plus 🐷</h1>
+            <p>Track your child's savings and learning progress!</p>
+        </header>
+
+        <div class="content-wrapper">
+            <div class="container">
+                <h2>Bank Contents</h2>
+                <div class="total-section">
+                    <h2>Total Saved</h2>
+                    <h1 id="totalSaved">£0.00</h1>
+                    <p id="updateTime">Last updated: Never</p>
+                </div>
+
+                <div class="coin-grid" id="coinGrid">
+                    <!-- Coins will be displayed here -->
+                </div>
+                
+                <div class="dispense-section">
+                    <h2>Dispense Coins</h2>
+                    <div class="dispense-form">
+                        <input type="text" id="dispenseAmount" placeholder="£" pattern="[0-9]+" inputmode="numeric">
+                        <button class="primary-btn" id="dispenseBtn">Dispense</button>
+                    </div>
+                    <div class="success-message" id="successMessage">Coins dispensed successfully!</div>
+                    <div class="error-message" id="errorMessage"></div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="danger-btn" id="emptyBankBtn">Empty Bank</button>
+                </div>
+            </div>
+            
+            <div class="container">
+                <h2>Learning Progress</h2>
+                
+                <!-- Main Game Mode Tabs -->
+                <div class="game-mode-tabs">
+                    <div class="game-tab active" data-game="AddEmUp">AddEmUp</div>
+                    <div class="game-tab" data-game="CoinCombo">CoinCombo</div>
+                </div>
+                
+                <!-- AddEmUp Content -->
+                <div class="game-content active" id="AddEmUpContent">
+                    <!-- Difficulty tabs for AddEmUp -->
+                    <div class="difficulty-tabs">
+                        <div class="difficulty-tab active" data-game="AddEmUp" data-difficulty="ALL">All</div>
+                        <div class="difficulty-tab" data-game="AddEmUp" data-difficulty="VERY_EASY">Very Easy</div>
+                        <div class="difficulty-tab" data-game="AddEmUp" data-difficulty="EASY">Easy</div>
+                        <div class="difficulty-tab" data-game="AddEmUp" data-difficulty="MEDIUM">Medium</div>
+                        <div class="difficulty-tab" data-game="AddEmUp" data-difficulty="HARD">Hard</div>
+                    </div>
+                    
+                    <!-- AddEmUp - All Difficulties (default view) -->
+                    <div class="difficulty-content active" id="AddEmUp-ALL">
+                        <div class="chart-container">
+                            <canvas id="addEmUpChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" id="addEmUpRatio">
+                            <h4>AddEmUp Success Rate</h4>
+                            <div class="ratio-number" id="addEmUpPercent">0%</div>
+                            <div class="ratio-detail" id="addEmUpDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AddEmUp - Very Easy -->
+                    <div class="difficulty-content" id="AddEmUp-VERY_EASY">
+                        <div class="chart-container">
+                            <canvas id="addEmUpVeryEasyChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--very-easy);">
+                            <h4>Very Easy Difficulty Stats</h4>
+                            <div class="ratio-number" id="addEmUpVeryEasyPercent" style="color: var(--very-easy);">0%</div>
+                            <div class="ratio-detail" id="addEmUpVeryEasyDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AddEmUp - Easy -->
+                    <div class="difficulty-content" id="AddEmUp-EASY">
+                        <div class="chart-container">
+                            <canvas id="addEmUpEasyChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--easy);">
+                            <h4>Easy Difficulty Stats</h4>
+                            <div class="ratio-number" id="addEmUpEasyPercent" style="color: var(--easy);">0%</div>
+                            <div class="ratio-detail" id="addEmUpEasyDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AddEmUp - Medium -->
+                    <div class="difficulty-content" id="AddEmUp-MEDIUM">
+                        <div class="chart-container">
+                            <canvas id="addEmUpMediumChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--medium);">
+                            <h4>Medium Difficulty Stats</h4>
+                            <div class="ratio-number" id="addEmUpMediumPercent" style="color: var(--medium);">0%</div>
+                            <div class="ratio-detail" id="addEmUpMediumDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- AddEmUp - Hard -->
+                    <div class="difficulty-content" id="AddEmUp-HARD">
+                        <div class="chart-container">
+                            <canvas id="addEmUpHardChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--hard);">
+                            <h4>Hard Difficulty Stats</h4>
+                            <div class="ratio-number" id="addEmUpHardPercent" style="color: var(--hard);">0%</div>
+                            <div class="ratio-detail" id="addEmUpHardDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- CoinCombo Content -->
+                <div class="game-content" id="CoinComboContent">
+                    <!-- Difficulty tabs for CoinCombo -->
+                    <div class="difficulty-tabs">
+                        <div class="difficulty-tab active" data-game="CoinCombo" data-difficulty="ALL">All</div>
+                        <div class="difficulty-tab" data-game="CoinCombo" data-difficulty="VERY_EASY">Very Easy</div>
+                        <div class="difficulty-tab" data-game="CoinCombo" data-difficulty="EASY">Easy</div>
+                        <div class="difficulty-tab" data-game="CoinCombo" data-difficulty="MEDIUM">Medium</div>
+                        <div class="difficulty-tab" data-game="CoinCombo" data-difficulty="HARD">Hard</div>
+                    </div>
+                    
+                    <!-- CoinCombo - All Difficulties (default view) -->
+                    <div class="difficulty-content active" id="CoinCombo-ALL">
+                        <div class="chart-container">
+                            <canvas id="coinComboChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" id="coinComboRatio">
+                            <h4>CoinCombo Success Rate</h4>
+                            <div class="ratio-number" id="coinComboPercent">0%</div>
+                            <div class="ratio-detail" id="coinComboDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- CoinCombo - Very Easy -->
+                    <div class="difficulty-content" id="CoinCombo-VERY_EASY">
+                        <div class="chart-container">
+                            <canvas id="coinComboVeryEasyChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--very-easy);">
+                            <h4>Very Easy Difficulty Stats</h4>
+                            <div class="ratio-number" id="coinComboVeryEasyPercent" style="color: var(--very-easy);">0%</div>
+                            <div class="ratio-detail" id="coinComboVeryEasyDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- CoinCombo - Easy -->
+                    <div class="difficulty-content" id="CoinCombo-EASY">
+                        <div class="chart-container">
+                            <canvas id="coinComboEasyChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--easy);">
+                            <h4>Easy Difficulty Stats</h4>
+                            <div class="ratio-number" id="coinComboEasyPercent" style="color: var(--easy);">0%</div>
+                            <div class="ratio-detail" id="coinComboEasyDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- CoinCombo - Medium -->
+                    <div class="difficulty-content" id="CoinCombo-MEDIUM">
+                        <div class="chart-container">
+                            <canvas id="coinComboMediumChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--medium);">
+                            <h4>Medium Difficulty Stats</h4>
+                            <div class="ratio-number" id="coinComboMediumPercent" style="color: var(--medium);">0%</div>
+                            <div class="ratio-detail" id="coinComboMediumDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                    
+                    <!-- CoinCombo - Hard -->
+                    <div class="difficulty-content" id="CoinCombo-HARD">
+                        <div class="chart-container">
+                            <canvas id="coinComboHardChart"></canvas>
+                        </div>
+                        
+                        <div class="ratio-item" style="border-bottom: 4px solid var(--hard);">
+                            <h4>Hard Difficulty Stats</h4>
+                            <div class="ratio-number" id="coinComboHardPercent" style="color: var(--hard);">0%</div>
+                            <div class="ratio-detail" id="coinComboHardDetail">0 wins / 0 games</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container full-width">
+                <div class="pin-status-section">
+                    <div class="pin-grid">
+                        <div class="pin-status-box">
+                            <div class="status-indicator">
+                                <h3>Bank Status: <span id="bankLockStatus">Checking...</span></h3>
+                            </div>
+                        
+                            <div class="pin-actions">
+                                <div class="pin-form" id="unlockForm" style="display: none;">
+                                    <input type="password" id="unlockPin" placeholder="Enter PIN" pattern="[0-9]+" inputmode="numeric">
+                                    <div class="pin-action-buttons">
+                                        <button class="primary-btn" id="unlockBankBtn">Unlock Bank</button>
+                                    </div>
+                                </div>
+                            
+                                <div class="pin-form" id="lockForm" style="display: none;">
+                                    <input type="password" id="lockPin" placeholder="Enter PIN" pattern="[0-9]+" inputmode="numeric">
+                                    <div class="pin-action-buttons">
+                                        <button class="danger-btn" id="lockBankBtn">Lock Bank</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <div class="pin-change-box">
+                            <div class="change-pin-section">
+                                <h3>Change PIN</h3>
+                                <div class="pin-form">
+                                    <input type="password" id="oldPin" placeholder="Current PIN" pattern="[0-9]+" inputmode="numeric">
+                                    <input type="password" id="newPin" placeholder="New PIN" pattern="[0-9]+" inputmode="numeric">
+                                    <button class="danger-btn" id="changePinBtn">Change PIN</button>
+                                    <div class="pin-change-success" id="pinChangeSuccess">PIN changed successfully!</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>PiggyBank Plus &copy; 2025</p>
+        </footer>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const coinGrid = document.getElementById('coinGrid');
+        const totalSaved = document.getElementById('totalSaved');
+        const updateTime = document.getElementById('updateTime');
+        const dispenseAmount = document.getElementById('dispenseAmount');
+        const dispenseBtn = document.getElementById('dispenseBtn');
+        const emptyBankBtn = document.getElementById('emptyBankBtn');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Game Charts Elements
+        const gameTabs = document.querySelectorAll('.game-tab');
+        const gameContents = document.querySelectorAll('.game-content');
+        const difficultyTabs = document.querySelectorAll('.difficulty-tab');
+        const difficultyContents = document.querySelectorAll('.difficulty-content');
+        
+        // PIN Elements
+        const bankLockStatus = document.getElementById('bankLockStatus');
+        const unlockForm = document.getElementById('unlockForm');
+        const lockForm = document.getElementById('lockForm');
+        const unlockPin = document.getElementById('unlockPin');
+        const lockPin = document.getElementById('lockPin');
+        const unlockBankBtn = document.getElementById('unlockBankBtn');
+        const lockBankBtn = document.getElementById('lockBankBtn');
+        const oldPin = document.getElementById('oldPin');
+        const newPin = document.getElementById('newPin');
+        const changePinBtn = document.getElementById('changePinBtn');
+        
+        // Chart Instances
+        let chartInstances = {
+            'AddEmUp-ALL': null,
+            'AddEmUp-VERY_EASY': null,
+            'AddEmUp-EASY': null,
+            'AddEmUp-MEDIUM': null,
+            'AddEmUp-HARD': null,
+            'CoinCombo-ALL': null,
+            'CoinCombo-VERY_EASY': null,
+            'CoinCombo-EASY': null,
+            'CoinCombo-MEDIUM': null,
+            'CoinCombo-HARD': null
+        };
+        
+        // Game Statistics Elements
+        const statElements = {
+            'AddEmUp-ALL': {
+                percent: document.getElementById('addEmUpPercent'),
+                detail: document.getElementById('addEmUpDetail')
+            },
+            'AddEmUp-VERY_EASY': {
+                percent: document.getElementById('addEmUpVeryEasyPercent'),
+                detail: document.getElementById('addEmUpVeryEasyDetail')
+            },
+            'AddEmUp-EASY': {
+                percent: document.getElementById('addEmUpEasyPercent'),
+                detail: document.getElementById('addEmUpEasyDetail')
+            },
+            'AddEmUp-MEDIUM': {
+                percent: document.getElementById('addEmUpMediumPercent'),
+                detail: document.getElementById('addEmUpMediumDetail')
+            },
+            'AddEmUp-HARD': {
+                percent: document.getElementById('addEmUpHardPercent'),
+                detail: document.getElementById('addEmUpHardDetail')
+            },
+            'CoinCombo-ALL': {
+                percent: document.getElementById('coinComboPercent'),
+                detail: document.getElementById('coinComboDetail')
+            },
+            'CoinCombo-VERY_EASY': {
+                percent: document.getElementById('coinComboVeryEasyPercent'),
+                detail: document.getElementById('coinComboVeryEasyDetail')
+            },
+            'CoinCombo-EASY': {
+                percent: document.getElementById('coinComboEasyPercent'),
+                detail: document.getElementById('coinComboEasyDetail')
+            },
+            'CoinCombo-MEDIUM': {
+                percent: document.getElementById('coinComboMediumPercent'),
+                detail: document.getElementById('coinComboMediumDetail')
+            },
+            'CoinCombo-HARD': {
+                percent: document.getElementById('coinComboHardPercent'),
+                detail: document.getElementById('coinComboHardDetail')
+            }
+        };
+        
+        // Chart Colors
+        const chartColors = {
+            'AddEmUp': {
+                primary: 'rgba(218, 130, 240, 0.6)',   // var(--very-easy)
+                secondary: 'rgba(218, 130, 240, 0.3)'  // Same but more transparent
+            },
+            'CoinCombo': {
+                primary: 'rgba(218, 130, 240, 0.6)',   // var(--secondary)
+                secondary: 'rgba(218, 130, 240, 0.3)'  // Same but more transparent
+            },
+            'VERY_EASY': {
+                primary: 'rgba(114, 211, 107, 0.6)',   // var(--very-easy)
+                secondary: 'rgba(114, 211, 107, 0.3)'
+            },
+            'EASY': {
+                primary: 'rgba(237, 235, 109, 0.6)',   // var(--easy)
+                secondary: 'rgba(237, 235, 109, 0.3)'
+            },
+            'MEDIUM': {
+                primary: 'rgba(239, 180, 98, 0.6)',    // var(--medium)
+                secondary: 'rgba(239, 180, 98, 0.3)'
+            },
+            'HARD': {
+                primary: 'rgba(200, 50, 50, 0.6)',  // Darker hard red  
+                primary: 'rgba(220, 80, 90, 0.6)',  // Darker pastel red  
+                secondary: 'rgba(220, 80, 90, 0.3)'  // Darker pastel red (lighter opacity)  
+
+            }
+        };
+        
+        // Update border colors to slightly darker versions
+        const chartBorderColors = {
+            'AddEmUp': {
+                primary: 'rgba(100, 181, 246, 1)',
+                secondary: 'rgba(100, 181, 246, 0.5)'
+            },
+            'CoinCombo': {
+                primary: 'rgba(129, 199, 132, 1)',
+                secondary: 'rgba(129, 199, 132, 0.5)'
+            },
+            'VERY_EASY': {
+                primary: 'rgba(100, 181, 246, 1)',
+                secondary: 'rgba(100, 181, 246, 0.5)'
+            },
+            'EASY': {
+                primary: 'rgba(129, 199, 132, 1)',
+                secondary: 'rgba(129, 199, 132, 0.5)'
+            },
+            'MEDIUM': {
+                primary: 'rgba(255, 183, 77, 1)',
+                secondary: 'rgba(255, 183, 77, 0.5)'
+            },
+            'HARD': {
+                primary: 'rgba(239, 154, 154, 1)',
+                secondary: 'rgba(239, 154, 154, 0.5)'
+            }
+        };
+        
+        let pollingInterval;
+        let isLocked = false;
+        let gameData = []; // Store game data globally
+        
+        // Coin symbols
+        const coinSymbols = {
+            '1': '1p',
+            '2': '2p',
+            '5': '5p',
+            '10': '10p',
+            '20': '20p',
+            '50': '50p',
+            '100': '£1',
+            '200': '£2'
+        };
+        
+        // Initialize the application
+        function init() {
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js is not loaded properly');
+            } else {
+                console.log('Chart.js is loaded and ready');
+            }
+            
+            // Set up canvas elements
+            setupCanvasElements();
+            
+            // Input validation
+            dispenseAmount.addEventListener('input', function(e) {
+                // Modified to allow decimal point for currency amounts
+                this.value = this.value.replace(/[^0-9.]/g, '');
+                
+                // Ensure only one decimal point exists
+                const parts = this.value.split('.');
+                if (parts.length > 2) {
+                    this.value = parts[0] + '.' + parts.slice(1).join('');
+                }
+            });
+            
+            // Set up event listeners
+            dispenseBtn.addEventListener('click', handleDispense);
+            emptyBankBtn.addEventListener('click', handleEmptyBank);
+            
+            // Game tab switching event listeners
+            gameTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchGameTab(tab.dataset.game);
+                });
+            });
+            
+            // Difficulty tab switching event listeners
+            difficultyTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    switchDifficultyTab(tab.dataset.game, tab.dataset.difficulty);
+                });
+            });
+            
+            // PIN-related event listeners
+            unlockBankBtn.addEventListener('click', handleUnlockBank);
+            lockBankBtn.addEventListener('click', handleLockBank);
+            changePinBtn.addEventListener('click', handleChangePin);
+            
+            // Add enter key press handlers for form submission
+            unlockPin.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleUnlockBank();
+                }
+            });
+            
+            lockPin.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleLockBank();
+                }
+            });
+            
+            oldPin.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && newPin.value.trim()) {
+                    handleChangePin();
+                } else if (e.key === 'Enter') {
+                    newPin.focus(); // Move to next field if Enter pressed but next field empty
+                }
+            });
+            
+            newPin.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleChangePin();
+                }
+            });
+            
+            // Add enter key press handler for dispense form
+            dispenseAmount.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleDispense();
+                }
+            });
+            
+            // Initial data fetch
+            fetchBankValues();
+            fetchGameHistory();
+            checkLockStatus(); // Check bank lock status
+            
+            // Set up polling for bank values
+            pollingInterval = setInterval(fetchBankValues, 10000); // Poll every 10 seconds
+        }
+        
+        function setupCanvasElements() {
+            // Get all canvas elements
+            const canvases = document.querySelectorAll('canvas');
+            
+            // Set initial dimensions for all canvases
+            canvases.forEach(canvas => {
+                // Always set width and height explicitly
+                canvas.width = 400;
+                canvas.height = 300;
+                console.log(`Canvas ${canvas.id} initialized with dimensions: ${canvas.width}x${canvas.height}`);
+                
+                // Create empty chart instances for each canvas to avoid issues when rendering
+                if (canvas.id) {
+                    let gameType, difficulty;
+                    
+                    // Determine game type and difficulty from id
+                    if (canvas.id.includes('addEmUp')) {
+                        gameType = 'AddEmUp';
+                        if (canvas.id.includes('VeryEasy')) difficulty = 'VERY_EASY';
+                        else if (canvas.id.includes('Easy')) difficulty = 'EASY';
+                        else if (canvas.id.includes('Medium')) difficulty = 'MEDIUM';
+                        else if (canvas.id.includes('Hard')) difficulty = 'HARD';
+                        else difficulty = 'ALL';
+                    } else if (canvas.id.includes('coinCombo')) {
+                        gameType = 'CoinCombo';
+                        if (canvas.id.includes('VeryEasy')) difficulty = 'VERY_EASY';
+                        else if (canvas.id.includes('Easy')) difficulty = 'EASY';
+                        else if (canvas.id.includes('Medium')) difficulty = 'MEDIUM';
+                        else if (canvas.id.includes('Hard')) difficulty = 'HARD';
+                        else difficulty = 'ALL';
+                    }
+                    
+                    if (gameType) {
+                        const chartKey = difficulty ? `${gameType}-${difficulty}` : `${gameType}-ALL`;
+                        if (!chartInstances[chartKey]) {
+                            console.log(`Creating empty chart instance for ${chartKey}`);
+                        }
+                    }
+                }
+            });
+        }
+        
+        function switchGameTab(gameType) {
+            // Update tab active state
+            gameTabs.forEach(tab => {
+                if (tab.dataset.game === gameType) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Update content visibility
+            gameContents.forEach(content => {
+                if (content.id === gameType + 'Content') {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            setTimeout(() => {
+                redrawChartsForGameType(gameType);
+            }, 50); // Small delay to ensure DOM is updated
+        }
+        
+        function redrawChartsForGameType(gameType) {
+            if (!gameData || !gameData.length) return;
+            
+            const difficulties = ['ALL', 'VERY_EASY', 'EASY', 'MEDIUM', 'HARD'];
+            
+            difficulties.forEach(difficulty => {
+                const chartKey = `${gameType}-${difficulty}`;
+                let chartId;
+                
+                // Get the appropriate chart element ID
+                if (difficulty === 'ALL') {
+                    chartId = gameType === 'AddEmUp' ? 'addEmUpChart' : 'coinComboChart';
+                } else if (difficulty === 'VERY_EASY') {
+                    chartId = gameType === 'AddEmUp' ? 'addEmUpVeryEasyChart' : 'coinComboVeryEasyChart';
+                } else if (difficulty === 'EASY') {
+                    chartId = gameType === 'AddEmUp' ? 'addEmUpEasyChart' : 'coinComboEasyChart';
+                } else if (difficulty === 'MEDIUM') {
+                    chartId = gameType === 'AddEmUp' ? 'addEmUpMediumChart' : 'coinComboMediumChart';
+                } else if (difficulty === 'HARD') {
+                    chartId = gameType === 'AddEmUp' ? 'addEmUpHardChart' : 'coinComboHardChart';
+                }
+                
+                const chartElement = document.getElementById(chartId);
+                
+                if (chartElement) {
+                    // Filter games based on game type and difficulty
+                    const filteredGames = gameData.filter(game => {
+                        if (game.gameType !== gameType) return false;
+                        if (difficulty === 'ALL') return true;
+                        return String(game.difficulty) === String(difficulty);
+                    });
+                    
+                    // Redraw the chart
+                    renderChart(filteredGames, gameType, chartElement, chartInstances[chartKey], difficulty === 'ALL' ? null : difficulty);
+                    
+                    // Update statistics
+                    calculateGameStatistics(gameType, difficulty, filteredGames);
+                } else {
+                    console.error(`Chart element not found: ${chartId}`);
+                }
+            });
+        }
+        
+        function switchDifficultyTab(gameType, difficulty) {
+            console.log(`Switching to ${gameType} - ${difficulty} tab`);
+            
+            // Update tab active state only for the current game type
+            difficultyTabs.forEach(tab => {
+                if (tab.dataset.game === gameType) {
+                    if (tab.dataset.difficulty === difficulty) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                }
+            });
+            
+            // Update content visibility only for the current game type
+            difficultyContents.forEach(content => {
+                const contentId = `${gameType}-${difficulty}`;
+                if (content.id === contentId) {
+                    content.classList.add('active');
+                } else if (content.id.startsWith(gameType)) {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // Re-render the chart for the selected difficulty
+            if (gameData && gameData.length > 0) {
+                const gameTypeGames = gameData.filter(game => game.gameType === gameType);
+                
+                if (difficulty === 'ALL') {
+                    // For ALL tab, render the chart for all games of this type
+                    const chartElement = document.getElementById(gameType === 'AddEmUp' ? 'addEmUpChart' : 'coinComboChart');
+                    if (chartElement) {
+                        renderChart(gameTypeGames, gameType, chartElement, chartInstances[`${gameType}-ALL`]);
+                    }
+                } else {
+                    // For specific difficulty, filter games and render
+                    // Use string comparison for more reliable results
+                    const filteredGames = gameTypeGames.filter(game => String(game.difficulty) === String(difficulty));
+                    
+                    // Map difficulty to chart ID directly instead of constructing it
+                    let chartId;
+                    if (gameType === 'AddEmUp') {
+                        switch (difficulty) {
+                            case 'VERY_EASY': chartId = 'addEmUpVeryEasyChart'; break;
+                            case 'EASY': chartId = 'addEmUpEasyChart'; break;
+                            case 'MEDIUM': chartId = 'addEmUpMediumChart'; break;
+                            case 'HARD': chartId = 'addEmUpHardChart'; break;
+                            default: chartId = 'addEmUpChart';
+                        }
+                    } else { // CoinCombo
+                        switch (difficulty) {
+                            case 'VERY_EASY': chartId = 'coinComboVeryEasyChart'; break;
+                            case 'EASY': chartId = 'coinComboEasyChart'; break;
+                            case 'MEDIUM': chartId = 'coinComboMediumChart'; break;
+                            case 'HARD': chartId = 'coinComboHardChart'; break;
+                            default: chartId = 'coinComboChart';
+                        }
+                    }
+                    
+                    const chartElement = document.getElementById(chartId);
+                    console.log(`Rendering chart for ${chartId}, found element:`, !!chartElement);
+                    console.log(`Filtered ${filteredGames.length} games with difficulty ${difficulty}`);
+                    
+                    if (chartElement) {
+                        renderChart(filteredGames, gameType, chartElement, chartInstances[`${gameType}-${difficulty}`], difficulty);
+                    } else {
+                        console.error(`Chart element not found: ${chartId}`);
+                    }
+                }
+            }
+        }
+        
+        // Check the lock status of the bank
+        async function checkLockStatus() {
+            try {
+                const response = await fetch('/api/lockstatus');
+                if (!response.ok) throw new Error('Failed to fetch lock status');
+                
+                const data = await response.json();
+                isLocked = data.locked;
+                updateLockStatusUI();
+            } catch (error) {
+                console.error('Error checking lock status:', error);
+                bankLockStatus.textContent = 'Unknown';
+                showError('Could not check bank lock status. Please try refreshing the page.');
+            }
+        }
+        
+        // Update the UI based on lock status
+        function updateLockStatusUI() {
+            if (isLocked) {
+                bankLockStatus.textContent = 'Locked 🔒';
+                bankLockStatus.style.color = 'var(--danger)';
+                unlockForm.style.display = 'flex';
+                lockForm.style.display = 'none';
+            } else {
+                bankLockStatus.textContent = 'Unlocked 🔓';
+                bankLockStatus.style.color = 'var(--success)';
+                unlockForm.style.display = 'none';
+                lockForm.style.display = 'flex';
+            }
+        }
+        
+        // Handle unlocking the bank
+        async function handleUnlockBank() {
+            const pin = unlockPin.value.trim();
+            if (!pin) {
+                showError('Please enter your PIN');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/unlockbank', {
+                    method: 'POST',
+                    body: pin
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Incorrect PIN. Please try again.');
+                    }
+                    throw new Error('Failed to unlock bank. Please try again later.');
+                }
+                
+                isLocked = false;
+                updateLockStatusUI();
+                showSuccess('Bank unlocked successfully!');
+                unlockPin.value = '';
+            } catch (error) {
+                showError(error.message);
+                // Shake the PIN input to indicate error
+                unlockPin.classList.add('error-shake');
+                setTimeout(() => unlockPin.classList.remove('error-shake'), 500);
+            }
+        }
+        
+        // Handle locking the bank
+        async function handleLockBank() {
+            const pin = lockPin.value.trim();
+            if (!pin) {
+                showError('Please enter your PIN');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/lockbank', {
+                    method: 'POST',
+                    body: pin
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Incorrect PIN. Please try again.');
+                    }
+                    throw new Error('Failed to lock bank. Please try again later.');
+                }
+                
+                isLocked = true;
+                updateLockStatusUI();
+                showSuccess('Bank locked successfully!');
+                lockPin.value = '';
+            } catch (error) {
+                showError(error.message);
+                // Shake the PIN input to indicate error
+                lockPin.classList.add('error-shake');
+                setTimeout(() => lockPin.classList.remove('error-shake'), 500);
+            }
+        }
+        
+        // Handle changing the PIN
+        async function handleChangePin() {
+            const currentPin = oldPin.value.trim();
+            const pinToChange = newPin.value.trim();
+            
+            if (!currentPin || !pinToChange) {
+                showError('Please enter both current and new PIN');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/changepin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        oldpin: currentPin,
+                        newpin: pinToChange
+                    })
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Incorrect current PIN. Please try again.');
+                    }
+                    throw new Error('Failed to change PIN. Please try again later.');
+                }
+                
+                // Show general success message
+                showSuccess('PIN changed successfully!');
+                
+                // Enhanced PIN change success feedback
+                const changePinSection = document.querySelector('.change-pin-section');
+                const pinChangeSuccess = document.getElementById('pinChangeSuccess');
+                
+                // Highlight section with animation
+                changePinSection.classList.add('pin-success-highlight');
+                
+                // Show the success message in the PIN section
+                pinChangeSuccess.classList.add('visible');
+                
+                // Reset the form
+                oldPin.value = '';
+                newPin.value = '';
+                
+                // Remove the effects after a delay
+                setTimeout(() => {
+                    changePinSection.classList.remove('pin-success-highlight');
+                    pinChangeSuccess.classList.remove('visible');
+                }, 4000);
+                
+            } catch (error) {
+                showError(error.message);
+                // Shake the old PIN input to indicate error
+                oldPin.classList.add('error-shake');
+                setTimeout(() => oldPin.classList.remove('error-shake'), 500);
+            }
+        }
+        
+        // Fetch bank values from the API
+        async function fetchBankValues() {
+            try {
+                totalSaved.classList.add('loading');
+                const response = await fetch('/api/bankvalues');
+                if (!response.ok) throw new Error('Failed to fetch bank values');
+                
+                const data = await response.json();
+                renderBankValues(data);
+                updateTime.textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+                totalSaved.classList.remove('loading');
+            } catch (error) {
+                console.error('Error fetching bank values:', error);
+                totalSaved.classList.remove('loading');
+            }
+        }
+        
+        // Render bank values to the UI
+        // Render bank values to the UI with animated realistic coins
+// Render bank values to the UI with static realistic coins
+function renderBankValues(data) {
+    coinGrid.innerHTML = '';
+    let total = 0;
+    
+    for (const [denomination, count] of Object.entries(data)) {
+        const value = parseInt(denomination);
+        const subtotal = (value * count) / 100; // Convert to pounds
+        total += subtotal;
+        
+        const coinItem = document.createElement('div');
+        coinItem.className = 'coin-item';
+        
+        // Create static coin with proper denomination styling
+        const coinHtml = `
+            <div class="coin-container">
+                <div class="coin" data-denomination="${coinSymbols[denomination]}">
+                    <span>${coinSymbols[denomination]}</span>
+                </div>
+            </div>
+            <div class="coin-value">${count} coins</div>
+            <div>Value: £${subtotal.toFixed(2)}</div>
+        `;
+        
+        coinItem.innerHTML = coinHtml;
+        coinGrid.appendChild(coinItem);
+    }
+    
+    totalSaved.textContent = `£${total.toFixed(2)}`;
+}
+        
+        // Add this function to mock data to use in development
+        function mockGameData() {
+            console.log("Using mock game data for testing");
+            const mockGames = [
+                // AddEmUp games - Very Easy
+                {"gameType": "AddEmUp", "difficulty": "VERY_EASY", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "VERY_EASY", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "VERY_EASY", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "VERY_EASY", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                
+                // AddEmUp games - Easy
+                {"gameType": "AddEmUp", "difficulty": "EASY", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "EASY", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "EASY", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "EASY", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "EASY", "gameWon": true, "timestamp": "17:15:40-01/01/2025"},
+                
+                // AddEmUp games - Medium
+                {"gameType": "AddEmUp", "difficulty": "MEDIUM", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "MEDIUM", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "MEDIUM", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "MEDIUM", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "MEDIUM", "gameWon": true, "timestamp": "17:15:40-01/01/2025"},
+                
+                // AddEmUp games - Hard
+                {"gameType": "AddEmUp", "difficulty": "HARD", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "HARD", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "HARD", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "AddEmUp", "difficulty": "HARD", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                
+                // CoinCombo games - Very Easy
+                {"gameType": "CoinCombo", "difficulty": "VERY_EASY", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "VERY_EASY", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "VERY_EASY", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "VERY_EASY", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "VERY_EASY", "gameWon": true, "timestamp": "17:15:40-01/01/2025"},
+                
+                // CoinCombo games - Easy
+                {"gameType": "CoinCombo", "difficulty": "EASY", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "EASY", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "EASY", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "EASY", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "EASY", "gameWon": true, "timestamp": "17:15:40-01/01/2025"},
+                
+                // CoinCombo games - Medium
+                {"gameType": "CoinCombo", "difficulty": "MEDIUM", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "MEDIUM", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "MEDIUM", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "MEDIUM", "gameWon": false, "timestamp": "15:35:55-01/01/2025"},
+                
+                // CoinCombo games - Hard
+                {"gameType": "CoinCombo", "difficulty": "HARD", "gameWon": true, "timestamp": "09:15:10-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "HARD", "gameWon": false, "timestamp": "11:35:25-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "HARD", "gameWon": true, "timestamp": "13:55:40-01/01/2025"},
+                {"gameType": "CoinCombo", "difficulty": "HARD", "gameWon": false, "timestamp": "15:35:55-01/01/2025"}
+            ];
+            
+            return { games: mockGames };
+        }
+        
+        // Modified fetchGameHistory with fallback to mock data in case of API failure
+        async function fetchGameHistory() {
+            try {
+                console.log('Fetching game history from API...');
+                // Update URL to include the port number
+                const response = await fetch('/api/gamehistory');
+                
+                if (!response.ok) {
+                    console.warn(`API returned ${response.status}, falling back to mock data`);
+                    const mockData = mockGameData();
+                    gameData = mockData.games;
+                    renderGameHistory(mockData.games);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                if (!data.games || !Array.isArray(data.games)) {
+                    console.error('Invalid data structure returned from API, falling back to mock data');
+                    const mockData = mockGameData();
+                    gameData = mockData.games;
+                    renderGameHistory(mockData.games);
+                    return;
+                }
+                
+                // Debug: Print counts by game type and difficulty
+                const gameTypes = new Set(data.games.map(game => game.gameType));
+                console.log('Game types in data:', Array.from(gameTypes));
+                
+                // Count games by type and difficulty
+                Array.from(gameTypes).forEach(type => {
+                    const typeGames = data.games.filter(game => game.gameType === type);
+                    console.log(`${type} games: ${typeGames.length}`);
+                    
+                    const diffCounts = {};
+                    typeGames.forEach(game => {
+                        diffCounts[game.difficulty] = (diffCounts[game.difficulty] || 0) + 1;
+                    });
+                    
+                    console.log(`${type} games by difficulty:`, diffCounts);
+                });
+                
+                gameData = data.games;
+                renderGameHistory(data.games);
+            } catch (error) {
+                console.error('Error fetching game history:', error);
+                console.log('Falling back to mock data');
+                const mockData = mockGameData();
+                gameData = mockData.games;
+                renderGameHistory(mockData.games);
+            }
+        }
+        
+        // Render game history charts and statistics
+        function renderGameHistory(games) {
+            if (!games || !games.length) {
+                console.log('No games data available for rendering charts');
+                return;
+            }
+            
+            console.log(`Rendering game history with ${games.length} total games`);
+            
+            // Process AddEmUp games
+            const addEmUpGames = games.filter(game => game.gameType === 'AddEmUp');
+            console.log(`Found ${addEmUpGames.length} AddEmUp games`);
+            
+            // Render the main chart (All difficulty)
+            renderChart(addEmUpGames, 'AddEmUp', document.getElementById('addEmUpChart'), chartInstances['AddEmUp-ALL']);
+            calculateGameStatistics('AddEmUp', 'ALL', addEmUpGames);
+            
+            // Render difficulty-specific charts
+            renderDifficultyCharts('AddEmUp', addEmUpGames);
+            
+            // Process CoinCombo games
+            const coinComboGames = games.filter(game => game.gameType === 'CoinCombo');
+            console.log(`Found ${coinComboGames.length} CoinCombo games`);
+            
+            // Render the main chart (All difficulty)
+            renderChart(coinComboGames, 'CoinCombo', document.getElementById('coinComboChart'), chartInstances['CoinCombo-ALL']);
+            calculateGameStatistics('CoinCombo', 'ALL', coinComboGames);
+            
+            // Render difficulty-specific charts
+            renderDifficultyCharts('CoinCombo', coinComboGames);
+        }
+        
+        // Render difficulty-specific charts for a game type
+        function renderDifficultyCharts(gameType, games) {
+            const difficulties = ['VERY_EASY', 'EASY', 'MEDIUM', 'HARD'];
+            console.log(`Rendering ${gameType} difficulty charts with ${games.length} games`);
+            
+            difficulties.forEach(difficulty => {
+                const filteredGames = games.filter(game => String(game.difficulty) === String(difficulty));
+                console.log(`${gameType}-${difficulty}: Found ${filteredGames.length} games after filtering`);
+                
+                const chartKey = `${gameType}-${difficulty}`;
+                
+                // Direct mapping of chart elements instead of dynamic construction
+                let chartElementId;
+                if (gameType === 'AddEmUp') {
+                    switch(difficulty) {
+                        case 'VERY_EASY': chartElementId = 'addEmUpVeryEasyChart'; break;
+                        case 'EASY': chartElementId = 'addEmUpEasyChart'; break;
+                        case 'MEDIUM': chartElementId = 'addEmUpMediumChart'; break;
+                        case 'HARD': chartElementId = 'addEmUpHardChart'; break;
+                        default: chartElementId = 'addEmUpChart';
+                    }
+                } else { // CoinCombo
+                    switch(difficulty) {
+                        case 'VERY_EASY': chartElementId = 'coinComboVeryEasyChart'; break;
+                        case 'EASY': chartElementId = 'coinComboEasyChart'; break;
+                        case 'MEDIUM': chartElementId = 'coinComboMediumChart'; break;
+                        case 'HARD': chartElementId = 'coinComboHardChart'; break;
+                        default: chartElementId = 'coinComboChart';
+                    }
+                }
+                
+                const chartElement = document.getElementById(chartElementId);
+                
+                if (chartElement) {
+                    renderChart(filteredGames, gameType, chartElement, chartInstances[chartKey], difficulty);
+                    calculateGameStatistics(gameType, difficulty, filteredGames);
+                } else {
+                    console.error(`Chart element not found: ${chartElementId}`);
+                }
+            });
+        }
+        
+        // Render chart for all games or specific difficulty 
+        function renderChart(games, gameType, chartElement, chartInstance, difficulty = null) {
+            if (!chartElement) {
+                console.error(`Chart element not found for ${gameType} ${difficulty || 'ALL'}`);
+                return;
+            }
+            
+            // Clear console.log to make debugging easier
+            console.log(`Rendering chart for ${gameType} ${difficulty || 'ALL'} with ${games?.length || 0} games`);
+            
+            const chartKey = difficulty ? `${gameType}-${difficulty}` : `${gameType}-ALL`;
+            
+            // Make sure the chart element is visible and has dimensions
+            if (!chartElement.width || !chartElement.height) {
+                chartElement.width = 400;
+                chartElement.height = 300;
+                console.log(`Set dimensions for ${chartKey} chart:`, chartElement.width, chartElement.height);
+            }
+            
+            // If no games, set up a message
+            if (!games || games.length === 0) {
+                // Destroy previous chart if it exists
+                if (chartInstances[chartKey]) {
+                    chartInstances[chartKey].destroy();
+                    chartInstances[chartKey] = null;
+                }
+                
+                const ctx = chartElement.getContext('2d');
+                // Clear the canvas first
+                ctx.clearRect(0, 0, chartElement.width, chartElement.height);
+                
+                // Draw the "no data" message
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'center';
+                const diffText = difficulty ? difficulty.toLowerCase().replace('_', ' ') : '';
+                const message = `No ${diffText} ${gameType} games played yet.`;
+                ctx.fillText(message, chartElement.width / 2, chartElement.height / 2);
+                
+                console.log(`No data for ${chartKey}, displayed message: "${message}"`);
+                return;
+            }
+            
+            // Group games by date
+            const gamesByDate = {};
+            
+            games.forEach(game => {
+                // Extract date from timestamp (format: HH:MM:SS-DD/MM/YYYY)
+                if (!game.timestamp || typeof game.timestamp !== 'string') {
+                    console.warn('Game with invalid timestamp:', game);
+                    return;
+                }
+                
+                const parts = game.timestamp.split('-');
+                if (parts.length !== 2) {
+                    console.warn(`Invalid timestamp format for game: ${game.timestamp}`, game);
+                    return;
+                }
+                
+                const datePart = parts[1];
+                if (!datePart) {
+                    console.warn(`Invalid timestamp format for game: ${game.timestamp}`, game);
+                    return;
+                }
+                
+                // Create date entry if it doesn't exist
+                if (!gamesByDate[datePart]) {
+                    gamesByDate[datePart] = { won: 0, lost: 0 };
+                }
+                
+                // Increment the appropriate counter
+                if (game.gameWon) {
+                    gamesByDate[datePart].won++;
+                } else {
+                    gamesByDate[datePart].lost++;
+                }
+            });
+            
+            // Check if we found any valid dates
+            const dateCount = Object.keys(gamesByDate).length;
+            
+            if (dateCount === 0) {
+                // No valid dates found despite having games, show error message
+                const ctx = chartElement.getContext('2d');
+                ctx.clearRect(0, 0, chartElement.width, chartElement.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#666';
+                ctx.textAlign = 'center';
+                ctx.fillText("Error: Unable to process game data", chartElement.width / 2, chartElement.height / 2);
+                console.error("Found games but no valid dates for", chartKey);
+                return;
+            }
+            
+            // Sort dates chronologically
+            const sortedDates = Object.keys(gamesByDate).sort((a, b) => {
+                // Parse DD/MM/YYYY format
+                const [dayA, monthA, yearA] = a.split('/').map(Number);
+                const [dayB, monthB, yearB] = b.split('/').map(Number);
+                
+                // Compare years, then months, then days
+                if (yearA !== yearB) return yearA - yearB;
+                if (monthA !== monthB) return monthA - monthB;
+                return dayA - dayB;
+            });
+            
+            // Select colors based on game type or difficulty
+            const colors = difficulty ? chartColors[difficulty] : chartColors[gameType];
+            
+            // Prepare datasets for Chart.js
+            const datasets = [
+                {
+                    label: `Won`,
+                    data: sortedDates.map(date => gamesByDate[date].won),
+                    backgroundColor: colors.primary,
+                    stack: 'Stack 0'
+                },
+                {
+                    label: `Lost`,
+                    data: sortedDates.map(date => gamesByDate[date].lost),
+                    backgroundColor: colors.secondary,
+                    stack: 'Stack 0'
+                }
+            ];
+            
+            if (chartInstances[chartKey]) {
+                chartInstances[chartKey].destroy();
+            }
+            
+            try {
+                // Create the new chart
+                chartInstances[chartKey] = new Chart(chartElement, {
+                    type: 'bar',
+                    data: {
+                        labels: sortedDates,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Games'
+                                },
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0 
+                                }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return `Date: ${context[0].label}`;
+                                    }
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: difficulty ? 
+                                    `${gameType} - ${difficulty.replace('_', ' ')} Progress` : 
+                                    `${gameType} Learning Progress`
+                            },
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true
+                                }
+                            }
+                        }
+                    }
+                });
+                console.log(`Successfully created chart for ${chartKey}`);
+            } catch (error) {
+                console.error(`Error creating chart for ${chartKey}:`, error);
+            }
+        }
+        
+        // Calculate and display statistics for a game type and difficulty
+        function calculateGameStatistics(gameType, difficulty, games) {
+            const chartKey = `${gameType}-${difficulty}`;
+            const elements = statElements[chartKey];
+            
+            if (!elements) {
+                console.error(`Stat elements not found for ${chartKey}`);
+                return;
+            }
+            
+            if (!elements.percent || !elements.detail) {
+                console.error(`Missing percent or detail element for ${chartKey}`, elements);
+                return;
+            }
+            
+            const totalGames = games.length;
+            const wonGames = games.filter(game => game.gameWon).length;
+            const winPercentage = totalGames > 0 ? Math.round((wonGames / totalGames) * 100) : 0;
+            
+            elements.percent.textContent = `${winPercentage}%`;
+            elements.detail.textContent = `${wonGames} wins / ${totalGames} games`;
+            
+            console.log(`Statistics updated for ${chartKey}: ${winPercentage}% (${wonGames}/${totalGames})`);
+        }
+        
+        // Handle the dispense button click
+        async function handleDispense() {
+            if (isLocked) {
+                showError('Bank is locked. Please unlock the bank before dispensing coins.');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                highlightLockStatus();
+                dispenseAmount.value = '';
+                return;
+            }
+            
+            const amount = dispenseAmount.value.trim();
+
+            // Updated validation to support decimal values
+            if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+                showError('Please enter a valid positive amount');
+                return;
+            }
+            
+            // Convert decimal pounds to pence for the API (which expects pence)
+            const amountInPence = Math.round(parseFloat(amount) * 100).toString();
+            
+            try {
+                const response = await fetch('/api/exactdispense', {
+                    method: 'POST',
+                    body: amountInPence
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Failed to dispense coins');
+                }
+                
+                showSuccess('Coins dispensed successfully!');
+                dispenseAmount.value = '';
+                fetchBankValues();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+        
+        // Handle the empty bank button click
+        async function handleEmptyBank() {
+            if (isLocked) {
+                showError('Bank is locked. Please unlock the bank before emptying it.');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                highlightLockStatus();
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to empty the bank? This will remove all coins.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/emptybank', {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Failed to empty bank. Please try again later.');
+                
+                showSuccess('Bank emptied successfully!');
+                fetchBankValues();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+        
+        // Handle the factory reset button click
+        async function handleFactoryReset() {
+            if (isLocked) {
+                showError('Bank is locked. Please unlock the bank before performing a factory reset.');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                highlightLockStatus();
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to factory reset the PiggyBank? This will restore it to factory settings and cannot be undone.')) {
+                return;
+            }
+            
+            if (!confirm('This will delete all data. Are you absolutely sure?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/factoryreset', {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Factory reset failed. Please try again later.');
+                
+                showSuccess('Factory reset completed successfully!');
+                fetchBankValues();
+                fetchGameHistory();
+                checkLockStatus();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Highlight the lock status section to draw attention
+        function highlightLockStatus() {
+            const pinStatusSection = document.querySelector('.pin-status-section');
+            pinStatusSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Start the application
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
