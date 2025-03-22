@@ -325,6 +325,11 @@
             color: white;
             margin: 0 0 10px 0;
             font-size: 1.3em;
+            text-decoration: none; /* Remove underline */
+        }
+        
+        .total-section h2::after {
+            display: none; /* Remove the underline element completely */
         }
         
         .total-section h1 {
@@ -333,6 +338,7 @@
             margin: 15px 0;
             font-weight: 700;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-decoration: none; /* Remove underline */
         }
         
         .total-section p {
@@ -623,6 +629,19 @@
             background-color: white;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
+            border-top: none;
+        }
+        
+        /* This removes any horizontal lines that might be appearing */
+        .pin-status-section::before,
+        .pin-status-section::after,
+        .pin-change-box::before,
+        .pin-change-box::after,
+        .change-pin-section::before,
+        .change-pin-section::after {
+            display: none;
+            content: none;
+            border: none;
         }
 
         .pin-grid {
@@ -631,18 +650,63 @@
             gap: 30px;
         }
 
+        /* Fix both boxes to have the same structure */
         .pin-status-box, .pin-change-box {
             padding: 20px;
             border-radius: 12px;
             background-color: white;
+            height: auto;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
-        .pin-status-box {
-            border-left: 4px solid var(--primary);
+        /* Remove the previous border styles */
+        .pin-status-box, .pin-change-box {
+            border: none;
         }
 
-        .pin-change-box {
-            border-left: 4px solid var(--accent);
+        /* Make change-pin-section fit inside its box */
+        .change-pin-section {
+            margin-top: 0;
+            padding-top: 0;
+            height: 100%;
+            width: 100%;
+            position: relative;
+            border-top: none;
+        }
+
+        /* Make sure the headings are aligned at the same level */
+        .status-indicator h3, .change-pin-section h3 {
+            position: relative;
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding-top: 0;
+            display: inline-block;
+        }
+
+        /* Fix the PIN forms to be consistent */
+        .pin-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        /* Remove any styles related to underlining for consistency */
+        .change-pin-section h3::after,
+        .status-indicator h3::after,
+        .total-section h2::after {
+            display: none;
+        }
+
+        /* Make sure both PIN sections start at the same vertical position */
+        .status-indicator, .change-pin-section {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 15px;
         }
 
         @media (max-width: 768px) {
@@ -653,7 +717,7 @@
         
         .status-indicator {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             position: relative;
         }
         
@@ -682,10 +746,13 @@
         }
         
         .pin-form {
+            width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 15px;
             align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
         }
         
         .pin-form input {
@@ -878,6 +945,110 @@
         /* Container backgrounds */
         .container {
             background-color: white;
+        }
+
+        /* Make the PIN section headings align at the same level */
+        .status-indicator h3, .change-pin-section h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            padding-top: 0;
+            position: relative;
+            top: 0;
+        }
+
+        /* Ensure both PIN boxes have the same top padding */
+        .pin-status-box, .pin-change-box {
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        /* Make sure the heading containers start at the same vertical position */
+        .status-indicator, .change-pin-section {
+            margin-top: 0;
+            padding-top: 0;
+        }
+
+        /* Position the Change PIN heading inside the box */
+        .change-pin-section h3 {
+            position: relative;
+            top: 20px; /* Adjust this value to match the Bank Status positioning */
+            margin-bottom: 30px;
+        }
+
+        /* Make sure both boxes have the same internal structure */
+        .pin-status-box, .pin-change-box {
+            padding: 20px;
+            position: relative;
+        }
+
+        .status-indicator {
+            margin-bottom: 20px;
+        }
+
+        /* Remove the space between the heading and the form in Change PIN */
+        .change-pin-section {
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        /* Remove the horizontal line above Change PIN */
+        .change-pin-section h3::before,
+        .change-pin-section::before,
+        .pin-change-box::before,
+        .pin-change-box::after {
+            display: none !important; /* Force remove any decorative lines */
+        }
+
+        /* Also target any possible hr elements */
+        .pin-change-box hr,
+        .change-pin-section hr {
+            display: none !important;
+        }
+
+        /* Target any border-top that might be causing the line */
+        .pin-change-box,
+        .change-pin-section,
+        .change-pin-section h3 {
+            border-top: none !important;
+        }
+
+        /* Additionally ensure no unexpected margins create space for a border */
+        .change-pin-section {
+            margin-top: 0;
+            padding-top: 20px; /* Add some padding to match the other side */
+        }
+
+        /* Align the Bank Status and Change PIN headings */
+        .status-indicator h3,
+        .change-pin-section h3 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            padding-top: 0;
+            height: 30px; /* Set a fixed height for both */
+            line-height: 30px;
+            position: relative;
+            top: 0;
+        }
+
+        /* Ensure both container boxes have the same padding */
+        .pin-status-box,
+        .pin-change-box {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* Align from the top */
+        }
+
+        /* Add specific adjustment for Change PIN heading */
+        .change-pin-section {
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        /* Remove any vertical margins between elements */
+        .pin-form {
+            margin-top: 25px;
         }
     </style>
 </head>
@@ -2294,6 +2465,145 @@ function renderBankValues(data) {
         
         // Start the application
         document.addEventListener('DOMContentLoaded', init);
+
+        // Easter egg: Luke Skywalker Force unlock
+        // Add this to your existing JavaScript
+
+        // Variable to store potential "luke" input
+        let potentialLukeInput = '';
+
+        // Function to handle the Force unlock
+        function forceUnlock() {
+            // Two options for playing the Star Wars theme:
+            
+            // Option 1: Open the video in a new tab
+            window.open('https://www.youtube.com/watch?v=fl7MI8ZlczE', '_blank');
+            
+            // Option 2: Create an embedded YouTube player
+            const videoContainer = document.createElement('div');
+            videoContainer.style.position = 'fixed';
+            videoContainer.style.bottom = '20px';
+            videoContainer.style.right = '20px';
+            videoContainer.style.width = '300px';
+            videoContainer.style.height = '180px';
+            videoContainer.style.zIndex = '9999';
+            videoContainer.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
+            videoContainer.style.borderRadius = '8px';
+            videoContainer.style.overflow = 'hidden';
+            
+            // Create the YouTube iframe
+            const youtubeIframe = document.createElement('iframe');
+            youtubeIframe.width = '100%';
+            youtubeIframe.height = '100%';
+            youtubeIframe.src = 'https://www.youtube.com/embed/fl7MI8ZlczE?autoplay=1&mute=0';
+            youtubeIframe.frameBorder = '0';
+            youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            youtubeIframe.allowFullscreen = true;
+            
+            videoContainer.appendChild(youtubeIframe);
+            document.body.appendChild(videoContainer);
+            
+            // Show force unlock message
+            const forceMessage = document.createElement('div');
+            forceMessage.style.position = 'fixed';
+            forceMessage.style.top = '50%';
+            forceMessage.style.left = '50%';
+            forceMessage.style.transform = 'translate(-50%, -50%)';
+            forceMessage.style.background = 'rgba(0, 0, 0, 0.8)';
+            forceMessage.style.color = '#FFE81F'; // Star Wars yellow
+            forceMessage.style.padding = '30px';
+            forceMessage.style.borderRadius = '10px';
+            forceMessage.style.fontFamily = 'Arial, sans-serif';
+            forceMessage.style.fontSize = '24px';
+            forceMessage.style.textAlign = 'center';
+            forceMessage.style.zIndex = '9999';
+            forceMessage.style.boxShadow = '0 0 20px #FFE81F';
+            forceMessage.style.animation = 'fadeIn 1s';
+            forceMessage.innerHTML = '<p>The Force is strong with this one...</p><p>Bank unlocked by Luke Skywalker</p>';
+            document.body.appendChild(forceMessage);
+            
+            // Create a CSS animation for the message
+            const styleElement = document.createElement('style');
+            styleElement.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+            `;
+            document.head.appendChild(styleElement);
+            
+            // Force unlock the bank
+            isLocked = false;
+            updateLockStatusUI();
+            
+            // Remove the message after 5 seconds, but keep the video player
+            setTimeout(() => {
+                forceMessage.style.animation = 'fadeOut 1s';
+                setTimeout(() => {
+                    document.body.removeChild(forceMessage);
+                }, 1000);
+            }, 5000);
+            
+            // Add a close button for the video
+            const closeButton = document.createElement('button');
+            closeButton.textContent = 'X';
+            closeButton.style.position = 'absolute';
+            closeButton.style.top = '5px';
+            closeButton.style.right = '5px';
+            closeButton.style.background = '#FFE81F';
+            closeButton.style.border = 'none';
+            closeButton.style.borderRadius = '50%';
+            closeButton.style.width = '20px';
+            closeButton.style.height = '20px';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.zIndex = '10000';
+            
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(videoContainer);
+            });
+            
+            videoContainer.appendChild(closeButton);
+        }
+
+        // Add event listeners to both PIN input fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const pinInputs = [
+                document.getElementById('unlockPin'),
+                document.getElementById('lockPin'),
+                document.getElementById('oldPin'),
+                document.getElementById('newPin')
+            ];
+            
+            pinInputs.forEach(input => {
+                if (!input) return;
+                
+                input.addEventListener('keyup', function(e) {
+                    // Check if the key pressed is a letter in "luke"
+                    const char = e.key.toLowerCase();
+                    if ("luke".includes(char)) {
+                        // Add to our potential luke input
+                        potentialLukeInput += char;
+                        
+                        // Check if it contains "luke" anywhere
+                        if (potentialLukeInput.includes("luke")) {
+                            forceUnlock();
+                            // Reset the input and potential luke to avoid multiple triggers
+                            input.value = "";
+                            potentialLukeInput = '';
+                        }
+                        
+                        // Keep only the last 10 characters to avoid memory issues
+                        if (potentialLukeInput.length > 10) {
+                            potentialLukeInput = potentialLukeInput.slice(-10);
+                        }
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
